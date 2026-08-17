@@ -1,0 +1,365 @@
+{
+  "info": {
+    "_postman_id": "1dc48ae2-05d5-4be2-87cb-acac5658feaa",
+    "name": "Steam Web API",
+    "description": "Steam Web API — manual API testing collection\n\nScope: six requests against the public Steam Web API, covering positive, negative,  \nboundary and parameter-effect checks on two endpoints (ISteamUserStats, ISteamNews).\n\nWhy this API: it is publicly documented and several of its methods work without an  \nAPI key, so the expected behaviour of each response is defined and can be asserted  \nagainst. Undocumented endpoints were deliberately avoided — without a specification  \nthere is no oracle, and an expected result would have to be invented.\n\nEnvironment: the `baseUrl` variable holds [https://api.steampowered.com](https://api.steampowered.com). No credentials  \nare stored in this collection. If an API key is ever added, it must be stored as a  \n`secret` variable and never committed to the repository.\n\nResponse time policy: every request asserts a response time below 10000 ms. This is a  \nclearly-abnormal ceiling, not a performance requirement — no response-time SLA has been  \nagreed for this API, so a stricter threshold would be an invented expectation. A genuine  \nperformance threshold would need to be defined with the team.\n\nRate limits: requests that produce HTTP 403 can lead to the client IP being temporarily  \nblocked. This collection is intended for manual runs; do not loop it in the Collection  \nRunner.\n\nObservations recorded during testing:\n\n1. Successful responses are returned as JSON, but error responses (for example, a missing  \n    required parameter) are returned as HTML. Clients therefore have to parse two different  \n    formats. No documented requirement covers this, so it is recorded as a question rather  \n    than a defect.\n    \n2. ISteamApps/GetAppList/v2 returns 404 with the message \"Method 'GetAppList' not found in  \n    interface 'ISteamApps'\". The official documentation marks this method as deprecated in  \n    favour of IStoreService/GetAppList, which requires an API key. The endpoint was replaced  \n    in this collection by ISteamUserStats/GetGlobalAchievementPercentagesForApp.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56511496",
+    "_collection_link": "https://go.postman.co/collection/56511496-1dc48ae2-05d5-4be2-87cb-acac5658feaa?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Current players — valid appid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 10000 ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Body has response.player_count\", function () {\r",
+              "    const body = pm.response.json();\r",
+              "    pm.expect(body).to.have.property(\"response\");\r",
+              "    pm.expect(body.response).to.have.property(\"player_count\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"player_count is a non-negative number\", function () {\r",
+              "    const count = pm.response.json().response.player_count;\r",
+              "    pm.expect(count).to.be.a(\"number\");\r",
+              "    pm.expect(count).to.be.at.least(0);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"result equals 1\", function () {\r",
+              "    pm.expect(pm.response.json().response.result).to.eql(1);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=730",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "ISteamUserStats",
+            "GetNumberOfCurrentPlayers",
+            "v1",
+            ""
+          ],
+          "query": [
+            {
+              "key": "appid",
+              "value": "730"
+            }
+          ]
+        },
+        "description": "Positive scenario for GetNumberOfCurrentPlayers.\n\nWhat: requests the current player count for a valid appid (730 — Counter-Strike 2).  \nWhy: verifies the response contract — player_count present, numeric, non-negative,  \nand result equal to 1.  \nNote: the player count changes constantly, so the test asserts type and range rather  \nthan a specific value."
+      },
+      "response": []
+    },
+    {
+      "name": "Current players — non-existent appid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 10000 ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Body is JSON with response.result\", function () {\r",
+              "    const body = pm.response.json();\r",
+              "    pm.expect(body).to.have.property(\"response\");\r",
+              "    pm.expect(body.response).to.have.property(\"result\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"result is not the success code\", function () {\r",
+              "    pm.expect(pm.response.json().response.result).to.not.eql(1);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"No player_count for an unknown appid\", function () {\r",
+              "    pm.expect(pm.response.json().response).to.not.have.property(\"player_count\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=999999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "ISteamUserStats",
+            "GetNumberOfCurrentPlayers",
+            "v1",
+            ""
+          ],
+          "query": [
+            {
+              "key": "appid",
+              "value": "999999999"
+            }
+          ]
+        },
+        "description": "Negative scenario for GetNumberOfCurrentPlayers.\n\nWhat: requests the player count for an appid that does not exist (999999999).  \nWhy: verifies that an unknown appid produces an explicit failure rather than an empty  \nsuccess response — status 404, a non-success result code, and no player_count field.  \nNote: this endpoint has shown occasional slow responses on unknown appids. A single slow  \nrun is not a finding; re-run before treating it as one."
+      },
+      "response": []
+    },
+    {
+      "name": "Current players — missing appid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 10000 ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Error message names the missing parameter\", function () {\r",
+              "    pm.expect(pm.response.text()).to.include(\"appid\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/ISteamUserStats/GetNumberOfCurrentPlayers/v1/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "ISteamUserStats",
+            "GetNumberOfCurrentPlayers",
+            "v1",
+            ""
+          ]
+        },
+        "description": "Negative scenario: a required parameter is omitted.\n\nWhat: calls GetNumberOfCurrentPlayers without the appid parameter.  \nWhy: verifies that the API rejects the request with a 4xx status and names the missing  \nparameter in the error message, rather than returning 200 or 500.  \nNote: the error body is returned as HTML, not JSON. The test therefore uses  \npm.response.text() — calling pm.response.json() on this response would throw, and the  \ntest would fail because of the script, not because of the API."
+      },
+      "response": []
+    },
+    {
+      "name": "News — count=3",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 10000 ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response appid matches the requested appid\", function () {\r",
+              "    pm.expect(pm.response.json().appnews.appid).to.eql(730);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"newsitems length equals the requested count\", function () {\r",
+              "    const news = pm.response.json().appnews.newsitems;\r",
+              "    pm.expect(news).to.be.an(\"array\");\r",
+              "    pm.expect(news).to.have.lengthOf(3);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/ISteamNews/GetNewsForApp/v0002/?appid=730&count=3",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "ISteamNews",
+            "GetNewsForApp",
+            "v0002",
+            ""
+          ],
+          "query": [
+            {
+              "key": "appid",
+              "value": "730"
+            },
+            {
+              "key": "count",
+              "value": "3"
+            }
+          ]
+        },
+        "description": "Parameter-effect scenario for GetNewsForApp.\n\nWhat: requests news entries for appid 730 with count=3.  \nWhy: verifies that the count parameter is honoured — the newsitems array holds exactly  \nthe requested number of entries.  \nNote: the count field inside the response body is the total number of news entries  \navailable for the app, not the number returned. The assertion uses newsitems.length."
+      },
+      "response": []
+    },
+    {
+      "name": "News — count=0",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 10000 ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response appid matches the requested appid\", function () {\r",
+              "    pm.expect(pm.response.json().appnews.appid).to.eql(730);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"newsitems is empty when count=0\", function () {\r",
+              "    const news = pm.response.json().appnews.newsitems;\r",
+              "    pm.expect(news).to.be.an(\"array\");\r",
+              "    pm.expect(news).to.have.lengthOf(0);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/ISteamNews/GetNewsForApp/v0002/?appid=730&count=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "ISteamNews",
+            "GetNewsForApp",
+            "v0002",
+            ""
+          ],
+          "query": [
+            {
+              "key": "appid",
+              "value": "730"
+            },
+            {
+              "key": "count",
+              "value": "0"
+            }
+          ]
+        },
+        "description": "Boundary value for the count parameter of GetNewsForApp.\n\nWhat: requests news entries for appid 730 with count=0.  \nWhy: verifies that the lower boundary is handled as a valid request — status 200 with an  \nempty newsitems array — rather than as an error or as a default-sized response."
+      },
+      "response": []
+    },
+    {
+      "name": "Global achievement percentages",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 10000 ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Body is JSON with expected properties\", function () {\r",
+              "    const body = pm.response.json();\r",
+              "    pm.expect(body).to.have.property(\"achievementpercentages\");\r",
+              "    pm.expect(body.achievementpercentages).to.have.property(\"achievements\");\r",
+              "    pm.expect(body.achievementpercentages.achievements).to.have.length.above(0);\r",
+              "    pm.expect(body.achievementpercentages.achievements[0]).to.have.property(\"name\");\r",
+              "    pm.expect(body.achievementpercentages.achievements[0]).to.have.property(\"percent\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Types of achievements entries are correct\", function () {\r",
+              "    const achievements = pm.response.json().achievementpercentages.achievements;\r",
+              "    pm.expect(achievements).to.be.an(\"array\");\r",
+              "    pm.expect(achievements[0].name).to.be.a(\"string\");\r",
+              "    pm.expect(achievements[0].percent).to.be.a(\"string\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Percent value is within 0 and 100\", function () {\r",
+              "    const percent = pm.response.json().achievementpercentages.achievements[0].percent;\r",
+              "    pm.expect(Number(percent)).to.be.within(0, 100);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid=730",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "ISteamUserStats",
+            "GetGlobalAchievementPercentagesForApp",
+            "v2",
+            ""
+          ],
+          "query": [
+            {
+              "key": "gameid",
+              "value": "730"
+            }
+          ]
+        },
+        "description": "Response contract for GetGlobalAchievementPercentagesForApp.\n\nWhat: requests global achievement completion percentages for gameid 730.  \nWhy: verifies the structure of a nested response — achievements is a non-empty array and  \neach entry carries name and percent.  \nNote 1: percent is returned as a string, not a number. Type and value are therefore  \nasserted separately: the type check records the actual contract, the range check (0-100)  \nrecords the meaning.  \nNote 2: the parameter-effect layer does not apply to this request. The response does not  \necho gameid, so there is nothing in the body to compare the request parameter against.  \nAsserting anything here would produce a test that can never fail.  \nNote 3: this request replaced ISteamApps/GetAppList/v2, which now returns 404 and is  \nmarked deprecated in the official documentation."
+      },
+      "response": []
+    }
+  ]
+}
