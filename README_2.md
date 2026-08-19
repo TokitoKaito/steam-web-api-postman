@@ -4,6 +4,8 @@ Manual API testing of the public Steam Web API: 6 requests, 26 assertions, cover
 
 Companion to [steam-store-search-qa](https://github.com/TokitoKaito/steam-store-search-qa) — manual UI testing of the Steam store search. Same product, different layer.
 
+Companion project: [sql-data-quality-detectors](https://github.com/TokitoKaito/sql-data-quality-detectors) — data-layer testing: 12 SQL detectors for data integrity defects.
+
 ## Contents
 
 | File | Description |
