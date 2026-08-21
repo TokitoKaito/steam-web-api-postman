@@ -64,4 +64,4 @@ The message is `Method 'GetAppList' not found in interface 'ISteamApps'`. The of
 
 ## Author
 
-Daniil, steepdan2003@gmail.com
+Daniil, danya.desimus@gmail.com, https://www.linkedin.com/in/daniil-demchenko-qa/
