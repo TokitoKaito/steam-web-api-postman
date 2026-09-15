@@ -1,10 +1,10 @@
-# Steam Web API — Postman Collection
+# Steam Web API: Postman Collection
 
 Manual API testing of the public Steam Web API: 6 requests, 26 assertions, covering positive, negative, boundary and parameter-effect checks.
 
-Companion to [steam-store-search-qa](https://github.com/TokitoKaito/steam-store-search-qa) — manual UI testing of the Steam store search. Same product, different layer.
+Companion to [steam-store-search-qa](https://github.com/TokitoKaito/steam-store-search-qa). Manual UI testing of the Steam store search: same product, different layer.
 
-Companion project: [sql-data-quality-detectors](https://github.com/TokitoKaito/sql-data-quality-detectors) — data-layer testing: 12 SQL detectors for data integrity defects.
+Companion project: [sql-data-quality-detectors](https://github.com/TokitoKaito/sql-data-quality-detectors). Data-layer testing: 12 SQL detectors for data integrity defects.
 
 ## Contents
 
@@ -17,11 +17,11 @@ Companion project: [sql-data-quality-detectors](https://github.com/TokitoKaito/s
 
 | # | Request | Type of check | Assertions |
 |---|---|---|---|
-| 1 | Current players — valid appid | Positive: response contract | 5 |
-| 2 | Current players — non-existent appid | Negative: unknown data | 5 |
-| 3 | Current players — missing appid | Negative: required parameter omitted | 3 |
-| 4 | News — count=3 | Parameter effect | 4 |
-| 5 | News — count=0 | Boundary value | 4 |
+| 1 | Current players, valid appid | Positive: response contract | 5 |
+| 2 | Current players, non-existent appid | Negative: unknown data | 5 |
+| 3 | Current players, missing appid | Negative: required parameter omitted | 3 |
+| 4 | News, count=3 | Parameter effect | 4 |
+| 5 | News, count=0 | Boundary value | 4 |
 | 6 | Global achievement percentages | Response contract, nested structure | 5 |
 
 Endpoints used: `ISteamUserStats/GetNumberOfCurrentPlayers`, `ISteamNews/GetNewsForApp`, `ISteamUserStats/GetGlobalAchievementPercentagesForApp`.
@@ -38,7 +38,7 @@ Run the collection manually. Requests that produce HTTP 403 can lead to the clie
 
 The Steam Web API is publicly documented and several of its methods work without an API key, so the expected behaviour of each response is defined and can be asserted against.
 
-Undocumented endpoints were deliberately avoided. Without a specification there is no oracle, and the expected result would have to be invented — which produces tests that verify the author's assumptions rather than the product.
+I deliberately avoided undocumented endpoints. Without a specification there is no oracle, so I would have to invent the expected result, and the tests would then verify my assumptions rather than the product.
 
 ## Observations
 
@@ -56,9 +56,9 @@ The message is `Method 'GetAppList' not found in interface 'ISteamApps'`. The of
 
 **Type and meaning are asserted separately.** `percent` is returned as a string, not a number. One assertion records the actual contract (`to.be.a("string")`), a second records the meaning (`Number(percent)` within 0–100). If either changes, it is immediately clear which one.
 
-**One layer is deliberately left unchecked.** Request 6 has no parameter-effect assertion: the response does not echo `gameid`, so there is nothing in the body to compare the request parameter against. Any assertion added there could never fail, and a test that cannot fail is not a test.
+**I deliberately left one layer unchecked.** Request 6 has no parameter-effect assertion: the response does not echo `gameid`, so there is nothing in the body to compare the request parameter against. Any assertion added there could never fail, and a test that cannot fail is not a test.
 
-**Response time policy.** Every request asserts a response time below 10000 ms. This is a clearly-abnormal ceiling, not a performance requirement — no response-time SLA has been agreed for this API, so a stricter threshold would be an invented expectation. Defining a real one would require agreement with the team.
+**Response time policy.** Every request asserts a response time below 10000 ms. This is a clearly-abnormal ceiling rather than a performance requirement. No response-time SLA has been agreed for this API, so a stricter threshold would be an invented expectation. Defining a real one would require agreement with the team.
 
 **No credentials are stored in this repository.** The environment contains only `baseUrl`. If an API key is ever added, it belongs in a `secret`-type variable and must not be committed.
 
